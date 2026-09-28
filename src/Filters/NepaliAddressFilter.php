@@ -48,6 +48,26 @@ class NepaliAddressFilter extends BaseFilter
 
     protected int $maxWards = 35;
 
+    /**
+     * @var array<int>|Closure|null
+     */
+    protected array | Closure | null $onlyProvinces = null;
+
+    /**
+     * @var array<int>|Closure|null
+     */
+    protected array | Closure | null $exceptProvinces = null;
+
+    /**
+     * @var array<int>|Closure|null
+     */
+    protected array | Closure | null $onlyDistricts = null;
+
+    /**
+     * @var array<int>|Closure|null
+     */
+    protected array | Closure | null $exceptDistricts = null;
+
     public static function getDefaultName(): ?string
     {
         return 'nepali_address';
@@ -266,6 +286,86 @@ class NepaliAddressFilter extends BaseFilter
     }
 
     /**
+     * Limit selectable provinces in the filter to a specific list of IDs.
+     *
+     * @param  array<int>|Closure|null  $provinces
+     */
+    public function onlyProvinces(array | Closure | null $provinces): static
+    {
+        $this->onlyProvinces = $provinces;
+
+        return $this;
+    }
+
+    /**
+     * @return array<int>|null
+     */
+    public function getOnlyProvinces(): ?array
+    {
+        return $this->evaluate($this->onlyProvinces);
+    }
+
+    /**
+     * Exclude specific provinces from filter selection.
+     *
+     * @param  array<int>|Closure|null  $provinces
+     */
+    public function exceptProvinces(array | Closure | null $provinces): static
+    {
+        $this->exceptProvinces = $provinces;
+
+        return $this;
+    }
+
+    /**
+     * @return array<int>|null
+     */
+    public function getExceptProvinces(): ?array
+    {
+        return $this->evaluate($this->exceptProvinces);
+    }
+
+    /**
+     * Limit selectable districts in the filter to a specific list of IDs.
+     *
+     * @param  array<int>|Closure|null  $districts
+     */
+    public function onlyDistricts(array | Closure | null $districts): static
+    {
+        $this->onlyDistricts = $districts;
+
+        return $this;
+    }
+
+    /**
+     * @return array<int>|null
+     */
+    public function getOnlyDistricts(): ?array
+    {
+        return $this->evaluate($this->onlyDistricts);
+    }
+
+    /**
+     * Exclude specific districts from filter selection.
+     *
+     * @param  array<int>|Closure|null  $districts
+     */
+    public function exceptDistricts(array | Closure | null $districts): static
+    {
+        $this->exceptDistricts = $districts;
+
+        return $this;
+    }
+
+    /**
+     * @return array<int>|null
+     */
+    public function getExceptDistricts(): ?array
+    {
+        return $this->evaluate($this->exceptDistricts);
+    }
+
+    /**
      * @return array<Component>
      */
     public function buildFormSchema(): array
@@ -277,7 +377,21 @@ class NepaliAddressFilter extends BaseFilter
         $provinceSelect = Select::make($provinceFieldName)
             ->label($this->getProvinceLabel())
             ->placeholder(__('nepali-address::nepali-address.select_province'))
-            ->options(fn (): array => AddressData::getProvinceOptions())
+            ->options(function (): array {
+                $options = AddressData::getProvinceOptions();
+
+                $only = $this->getOnlyProvinces();
+                if ($only !== null) {
+                    $options = array_intersect_key($options, array_flip($only));
+                }
+
+                $except = $this->getExceptProvinces();
+                if ($except !== null) {
+                    $options = array_diff_key($options, array_flip($except));
+                }
+
+                return $options;
+            })
             ->searchable($this->isSearchable)
             ->preload($this->isPreload)
             ->live()
@@ -292,10 +406,22 @@ class NepaliAddressFilter extends BaseFilter
             ->options(function (Get $get) use ($provinceFieldName): array {
                 $provinceId = $get($provinceFieldName);
                 if (filled($provinceId)) {
-                    return AddressData::getDistrictOptions((int) $provinceId);
+                    $options = AddressData::getDistrictOptions((int) $provinceId);
+                } else {
+                    $options = AddressData::getDistrictOptions();
                 }
 
-                return AddressData::getDistrictOptions();
+                $only = $this->getOnlyDistricts();
+                if ($only !== null) {
+                    $options = array_intersect_key($options, array_flip($only));
+                }
+
+                $except = $this->getExceptDistricts();
+                if ($except !== null) {
+                    $options = array_diff_key($options, array_flip($except));
+                }
+
+                return $options;
             })
             ->searchable($this->isSearchable)
             ->preload($this->isPreload)

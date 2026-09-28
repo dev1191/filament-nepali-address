@@ -57,17 +57,30 @@ php artisan vendor:publish --tag="nepali-address-translations"
 
 ## Recommended Database Schema
 
-The plugin recommends storing raw integer IDs for the administrative units. You can add them to your migration:
+You can easily add all necessary columns using the built-in `nepaliAddress()` Blueprint macro in your Laravel migrations:
+
+```php
+use Illuminate\Database\Schema\Blueprint;
+
+Schema::table('customers', function (Blueprint $table) {
+    // Adds province_id, district_id, municipality_id, ward_no, and postal_code
+    $table->nepaliAddress();
+
+    // Or with custom prefix for multiple addresses (e.g. billing_ & shipping_):
+    $table->nepaliAddress('billing_');
+    $table->nepaliAddress('shipping_', withWard: false, withPostalCode: false);
+});
+```
+
+To drop the address columns in rollback migrations:
 
 ```php
 Schema::table('customers', function (Blueprint $table) {
-    $table->unsignedSmallInteger('province_id')->nullable()->index();
-    $table->unsignedSmallInteger('district_id')->nullable()->index();
-    $table->unsignedSmallInteger('municipality_id')->nullable()->index();
-    $table->unsignedSmallInteger('ward_no')->nullable();
-    $table->string('postal_code', 10)->nullable();
+    $table->dropNepaliAddress();
+    $table->dropNepaliAddress('billing_');
 });
 ```
+
 
 ---
 
@@ -130,7 +143,19 @@ NepaliAddressSelects::make()
     ->districtRequired()
     ->localBodyRequired()
     ->columns(3) // Customize grid layout
-    ->relationshipValidation(true) // Enforces parent-child hierarchy validation rules
+    ->relationshipValidation(true); // Enforces parent-child hierarchy validation rules
+```
+
+#### Territory Restrictions (Restricting Specific Provinces / Districts)
+
+If your business or delivery coverage only serves specific regions (e.g. Kathmandu Valley or Bagmati Province only):
+
+```php
+NepaliAddressSelects::make()
+    ->onlyProvinces([3]) // Only Bagmati Pradesh
+    ->onlyDistricts([5, 6, 7]) // Only Kathmandu, Lalitpur, and Bhaktapur
+    // or exclude specific areas:
+    ->exceptProvinces([1, 2]);
 ```
 
 #### Standalone Field Selects
@@ -157,17 +182,19 @@ public static function table(Table $table): Table
 {
     return $table
         ->columns([
-            // Combined format: "Kathmandu Metropolitan City, Kathmandu, Bagmati Pradesh"
+            // Combined format: "Kathmandu-3, Kathmandu, Bagmati Pradesh"
             NepaliAddressColumn::make('address')
-                ->searchable(), // Smart search across local bodies, districts & provinces!
+                ->searchable() // Smart search across local bodies, districts & provinces!
+                ->sortable(),  // Multi-column sorting across province, district & municipality!
 
-            // Combined with ward: "Kathmandu Metropolitan City-3, Kathmandu, Bagmati Pradesh"
+            // Combined with ward:
             NepaliAddressColumn::make('address')
                 ->withWard(),
 
             // Multi-address prefix
             NepaliAddressColumn::make('shipping_address')
-                ->prefix('shipping_'),
+                ->prefix('shipping_')
+                ->sortable(),
         ]);
 }
 ```
@@ -175,10 +202,10 @@ public static function table(Table $table): Table
 #### Single-Level Table Columns
 
 ```php
-NepaliAddressColumn::province('province_id'),
-NepaliAddressColumn::district('district_id'),
-NepaliAddressColumn::localBody('municipality_id'),
-NepaliAddressColumn::ward('ward_no'),
+NepaliAddressColumn::province('province_id')->sortable(),
+NepaliAddressColumn::district('district_id')->sortable(),
+NepaliAddressColumn::localBody('municipality_id')->sortable(),
+NepaliAddressColumn::ward('ward_no')->sortable(),
 ```
 
 #### How Smart Search Works
@@ -186,7 +213,7 @@ NepaliAddressColumn::ward('ward_no'),
 When a user searches `"Kathmandu"` or `"काठमाडौं"`, the column looks up the matching IDs in-memory and transforms the query into indexed integer constraints:
 
 ```sql
-WHERE `municipality_id` IN (270, 271, ...) OR `district_id` IN (5) OR `province_id` IN (3)
+WHERE `municipality_id` IN (5, ...) OR `district_id` IN (5) OR `province_id` IN (3)
 ```
 
 This avoids slow string matching and full-table scans.
@@ -209,6 +236,11 @@ public static function table(Table $table): Table
 
             // With Ward filter
             NepaliAddressFilter::make()->withWard(),
+
+            // Restrict filter to specific territory
+            NepaliAddressFilter::make()
+                ->onlyProvinces([3])
+                ->onlyDistricts([5, 6, 7]),
 
             // Multi-address prefix
             NepaliAddressFilter::make('shipping_address')
@@ -252,7 +284,59 @@ public static function infolist(Infolist $infolist): Infolist
 
 ---
 
-### 5. Standalone Address Helper (`AddressData`)
+### 5. Eloquent Model Trait (`HasNepaliAddress`)
+
+Add the `HasNepaliAddress` trait to your models for instant accessors, formatted address strings, and powerful query scopes:
+
+```php
+use Dev1191\FilamentNepaliAddress\Traits\HasNepaliAddress;
+use Illuminate\Database\Eloquent\Model;
+
+class Customer extends Model
+{
+    use HasNepaliAddress;
+}
+```
+
+#### Dynamic Model Accessors
+
+```php
+$customer = Customer::find(1);
+
+// Automatic name resolution
+$customer->province_name;     // "Bagmati Pradesh"
+$customer->district_name;     // "Kathmandu"
+$customer->municipality_name; // "Kathmandu"
+$customer->nepali_address;    // "Kathmandu-4, Kathmandu, Bagmati Pradesh"
+
+// Multi-address prefix support (e.g. billing_ or shipping_)
+$customer->getProvinceName('billing_');
+$customer->getDistrictName('billing_');
+$customer->getLocalBodyName('billing_');
+$customer->getNepaliAddress('billing_', withWard: true);
+```
+
+#### Eloquent Query Scopes
+
+```php
+// Find all customers in Bagmati Province
+Customer::whereProvince(3)->get();
+
+// Find all customers in Kathmandu District
+Customer::whereDistrict(5)->get();
+
+// Find all customers in a specific local body or ward
+Customer::whereLocalBody(5)->get();
+Customer::whereWard(4)->get();
+
+// Smart search across all levels (English or Devanagari)
+Customer::whereNepaliAddress('Kathmandu')->get();
+Customer::whereNepaliAddress('काठमाडौं')->get();
+```
+
+---
+
+### 6. Standalone Address Helper (`AddressData`)
 
 You can access the static address helper anywhere in your application:
 

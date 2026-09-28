@@ -14,3 +14,7 @@ Initial release of `filament-nepali-address`, a complete Nepali address suite fo
 - **Table Filter (`NepaliAddressFilter`)**: Cascading table filter with bidirectional auto-population (selecting municipality auto-populates district and province), custom badge indicators, and single-level filter shortcuts.
 - **Infolist Entry (`NepaliAddressEntry`)**: Read-only display entry for Filament Infolists supporting combined addresses or individual administrative levels.
 - **Localization**: Full English (`en`) and Nepali (`ne`) language support for all labels, placeholders, validation error messages, and administrative names.
+- **Migration Blueprint Macros**: Easy schema definitions with `$table->nepaliAddress($prefix)` and `$table->dropNepaliAddress($prefix)`.
+- **Eloquent Model Trait (`HasNepaliAddress`)**: Model accessors (`province_name`, `district_name`, `municipality_name`, `nepali_address`) and query scopes (`whereProvince`, `whereDistrict`, `whereLocalBody`, `whereWard`, `whereNepaliAddress`).
+- **Territory Restrictions**: Restrict selectable regions using `onlyProvinces()`, `exceptProvinces()`, `onlyDistricts()`, and `exceptDistricts()` on both form components and table filters.
+- **Multi-Column Sorting**: Multi-column database sorting support across provinces, districts, and municipalities on `NepaliAddressColumn`.

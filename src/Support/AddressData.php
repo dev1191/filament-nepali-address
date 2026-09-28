@@ -319,10 +319,19 @@ class AddressData
         ?int $provinceId = null,
         ?int $districtId = null,
         ?int $municipalityId = null,
+        int | string | null $wardNo = null,
         string $separator = ', '
     ): string {
+        $localBodyName = static::getLocalBodyName($municipalityId);
+
+        if (filled($wardNo)) {
+            $localBodyName = filled($localBodyName)
+                ? "{$localBodyName}-{$wardNo}"
+                : (__('nepali-address::nepali-address.ward') . ' ' . $wardNo);
+        }
+
         $parts = array_filter([
-            static::getLocalBodyName($municipalityId),
+            $localBodyName,
             static::getDistrictName($districtId),
             static::getProvinceName($provinceId),
         ]);

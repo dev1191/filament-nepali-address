@@ -108,6 +108,24 @@ class NepaliAddressColumn extends TextColumn
         return $this;
     }
 
+    /**
+     * @return array<string>
+     */
+    public function getDefaultSortColumns(Model $record): array
+    {
+        return match ($this->level) {
+            'province' => [$this->getProvinceFieldName()],
+            'district' => [$this->getDistrictFieldName()],
+            'local_body' => [$this->getLocalBodyFieldName()],
+            'ward' => [$this->getWardFieldName()],
+            default => [
+                $this->getProvinceFieldName(),
+                $this->getDistrictFieldName(),
+                $this->getLocalBodyFieldName(),
+            ],
+        };
+    }
+
     public function addressPrefix(?string $prefix): static
     {
         $this->addressPrefix = $prefix;
