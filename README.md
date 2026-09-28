@@ -16,6 +16,8 @@ Provides cascading form selects, smart searchable table columns, cascading table
 - ⚡ **Filament v4 & v5 Ready**: Built exclusively for modern Filament schemas and panels.
 - 🔗 **Cascading Form Selects**: Seamless Province ➔ District ➔ Municipality dependent selects with automatic dependent state reset and searchable preloaded options.
 - 🗄️ **Optimized Storage**: Stores clean, normalized integer IDs (`province_id`, `district_id`, `municipality_id`) directly on Eloquent models.
+- 🧬 **Eloquent Model Trait (`HasNepaliAddress`)**: Formatted address accessors (`nepali_address`, `province_name`, etc.), multi-address prefix support, and high-performance query scopes.
+- 🏗️ **Migration Blueprint Macros**: One-line schema helpers `$table->nepaliAddress()` and `$table->dropNepaliAddress()` with prefix and optional field toggles.
 - 🔍 **High-Performance Table Search**: Automatically translates user text search queries (in both English and Devanagari script) into fast database `whereIn(...)` ID queries instead of slow text matches.
 - 🎯 **Cascading Table Filters**: Multi-level cascading filter with bidirectional auto-population (selecting a municipality auto-selects its district and province) and human-readable badges.
 - 📄 **Infolist Entries**: Read-only display components for Filament infolists.
@@ -300,39 +302,71 @@ class Customer extends Model
 
 #### Dynamic Model Accessors
 
+The trait provides convenient Eloquent attribute accessors that automatically resolve administrative IDs into human-readable names based on the active locale:
+
 ```php
 $customer = Customer::find(1);
 
 // Automatic name resolution
-$customer->province_name;     // "Bagmati Pradesh"
-$customer->district_name;     // "Kathmandu"
-$customer->municipality_name; // "Kathmandu"
-$customer->nepali_address;    // "Kathmandu-4, Kathmandu, Bagmati Pradesh"
+$customer->province_name;       // "Bagmati Pradesh" (or "बागमती प्रदेश")
+$customer->district_name;       // "Kathmandu" (or "काठमाडौं")
+$customer->municipality_name;   // "Kathmandu Metropolitan City" (or "काठमाडौं महानगरपालिका")
+$customer->local_body_name;     // Alias for municipality_name
 
-// Multi-address prefix support (e.g. billing_ or shipping_)
-$customer->getProvinceName('billing_');
-$customer->getDistrictName('billing_');
-$customer->getLocalBodyName('billing_');
-$customer->getNepaliAddress('billing_', withWard: true);
+// Formatted address strings
+$customer->nepali_address;      // "Kathmandu-4, Kathmandu, Bagmati Pradesh"
+$customer->full_nepali_address; // Alias for nepali_address
+```
+
+#### Helper Methods & Multi-Address Prefix Support
+
+When your model stores multiple addresses (e.g. `billing_` and `shipping_`), or when you need custom separators or to exclude ward numbers, call the helper methods directly:
+
+```php
+// Resolve names with custom prefix
+$customer->getProvinceName('billing_');     // "Bagmati Pradesh"
+$customer->getDistrictName('billing_');     // "Kathmandu"
+$customer->getLocalBodyName('billing_');    // "Kathmandu Metropolitan City"
+
+// Format address with custom prefix, ward toggle, and separator
+$customer->getNepaliAddress(
+    prefix: 'billing_',
+    withWard: true,
+    separator: ' - '
+);
+// "Kathmandu-4 - Kathmandu - Bagmati Pradesh"
+
+// Address without ward
+$customer->getNepaliAddress('shipping_', withWard: false);
+// "Kathmandu, Bagmati Pradesh"
 ```
 
 #### Eloquent Query Scopes
 
-```php
-// Find all customers in Bagmati Province
-Customer::whereProvince(3)->get();
+Filter records by province, district, local body, ward, or search terms. All query scopes accept an optional `$prefix` argument for multi-address models:
 
-// Find all customers in Kathmandu District
+```php
+// Find all customers in Bagmati Province (province_id = 3)
+Customer::whereProvince(3)->get();
+Customer::whereProvince(3, prefix: 'billing_')->get();
+
+// Find all customers in Kathmandu District (district_id = 5)
 Customer::whereDistrict(5)->get();
+Customer::whereDistrict(5, prefix: 'shipping_')->get();
 
 // Find all customers in a specific local body or ward
-Customer::whereLocalBody(5)->get();
+Customer::whereLocalBody(270)->get();
 Customer::whereWard(4)->get();
+Customer::whereWard(4, prefix: 'billing_')->get();
 
-// Smart search across all levels (English or Devanagari)
+// Smart address search (English or Devanagari script)
 Customer::whereNepaliAddress('Kathmandu')->get();
 Customer::whereNepaliAddress('काठमाडौं')->get();
+Customer::whereNepaliAddress('Pokhara', prefix: 'shipping_')->get();
 ```
+
+> [!TIP]
+> **How `whereNepaliAddress()` works**: It translates your search text into matching local body, district, and province IDs in-memory and queries the database using indexed integer `whereIn(...)` statements. If no locations match, it safely produces an empty result (`1 = 0`) without full-table scans.
 
 ---
 
