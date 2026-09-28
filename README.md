@@ -28,7 +28,7 @@ Provides cascading form selects, smart searchable table columns, cascading table
 ## Requirements
 
 - **PHP**: `^8.2`
-- **Laravel**: `^11.0` or `^12.0`
+- **Laravel**: `^11.0`, `^12.0`, or `^13.0`
 - **Filament**: `^4.0` or `^5.0`
 
 ---
