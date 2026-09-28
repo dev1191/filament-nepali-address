@@ -1,8 +1,8 @@
 # Filament Nepali Address
 
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/dev1191/filament-nepali-address.svg?style=flat-square)](https://packagist.org/packages/dev1191/filament-nepali-address)
-[![GitHub Tests Action Status](https://img.shields.io/github/actions/workflow/status/dev1191/filament-nepali-address/run-tests.yml?branch=main&label=tests&style=flat-square)](https://github.com/dev1191/filament-nepali-address/actions?query=workflow%3Arun-tests+branch%3Amain)
-[![GitHub Code Style Action Status](https://img.shields.io/github/actions/workflow/status/dev1191/filament-nepali-address/fix-php-code-style-issues.yml?branch=main&label=code%20style&style=flat-square)](https://github.com/dev1191/filament-nepali-address/actions?query=workflow%3A"Fix+PHP+code+styling"+branch%3Amain)
+[![GitHub Tests Action Status](https://img.shields.io/github/actions/workflow/status/dev1191/filament-nepali-address/tests.yml?branch=5.x&label=tests&style=flat-square)](https://github.com/dev1191/filament-nepali-address/actions?query=workflow%3Atests+branch%3A5.x)
+[![GitHub Code Style Action Status](https://img.shields.io/github/actions/workflow/status/dev1191/filament-nepali-address/fix-code-style.yml?branch=5.x&label=code%20style&style=flat-square)](https://github.com/dev1191/filament-nepali-address/actions?query=workflow%3Afix-code-style+branch%3A5.x)
 [![Total Downloads](https://img.shields.io/packagist/dt/dev1191/filament-nepali-address.svg?style=flat-square)](https://packagist.org/packages/dev1191/filament-nepali-address)
 
 A comprehensive, production-ready Nepali address plugin for **Filament (v4 and v5)**.
