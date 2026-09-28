@@ -334,6 +334,14 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 class User extends Authenticatable
 {
     use HasNepaliAddress;
+
+    /**
+     * Get the formatted address string.
+     */
+    public function getAddressAttribute(): string
+    {
+        return $this->getNepaliAddress();
+    }
 }
 ```
 
@@ -351,6 +359,7 @@ $user->municipality_name;   // "Kathmandu Metropolitan City" (or "काठम�
 $user->local_body_name;     // Alias for municipality_name
 
 // Formatted address strings
+$user->address;             // "Kathmandu-4, Kathmandu, Bagmati Pradesh" (via getAddressAttribute)
 $user->nepali_address;      // "Kathmandu-4, Kathmandu, Bagmati Pradesh"
 $user->full_nepali_address; // Alias for nepali_address
 ```
