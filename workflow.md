@@ -124,11 +124,11 @@
 
 ## Phase 8 — Publish
 
-- [ ] Push to GitHub under `dev1191/filament-nepali-address`
-- [ ] Tag `v1.0.0`
-- [ ] Submit to [Packagist](https://packagist.org/packages/submit)
-- [ ] Submit to the [Filament plugin directory](https://filamentphp.com/plugins) (listing form on their site)
-- [ ] Cross-link from your existing `laravel-bs-eloquent` / `filament-bs-eloquent` repos if relevant, since they target the same buyer
+- [ ] Push to GitHub under `dev1191/filament-nepali-address` (`git push origin 5.x --tags`)
+- [x] Tag `v1.0.0`
+- [ ] Submit to [Packagist](https://packagist.org/packages/submit) (`dev1191/filament-nepali-address`)
+- [ ] Submit to the [Filament plugin directory](https://filamentphp.com/plugins)
+- [ ] Cross-link from existing `dev1191` repositories where relevant
 
 ---
 
