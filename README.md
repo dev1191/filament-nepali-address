@@ -1,71 +1,322 @@
-# :package_description
+# Filament Nepali Address
 
-[![Latest Version on Packagist](https://img.shields.io/packagist/v/:vendor_slug/:package_slug.svg?style=flat-square)](https://packagist.org/packages/:vendor_slug/:package_slug)
-[![GitHub Tests Action Status](https://img.shields.io/github/actions/workflow/status/:vendor_slug/:package_slug/run-tests.yml?branch=main&label=tests&style=flat-square)](https://github.com/:vendor_slug/:package_slug/actions?query=workflow%3Arun-tests+branch%3Amain)
-[![GitHub Code Style Action Status](https://img.shields.io/github/actions/workflow/status/:vendor_slug/:package_slug/fix-php-code-style-issues.yml?branch=main&label=code%20style&style=flat-square)](https://github.com/:vendor_slug/:package_slug/actions?query=workflow%3A"Fix+PHP+code+styling"+branch%3Amain)
-[![Total Downloads](https://img.shields.io/packagist/dt/:vendor_slug/:package_slug.svg?style=flat-square)](https://packagist.org/packages/:vendor_slug/:package_slug)
+[![Latest Version on Packagist](https://img.shields.io/packagist/v/dev1191/filament-nepali-address.svg?style=flat-square)](https://packagist.org/packages/dev1191/filament-nepali-address)
+[![GitHub Tests Action Status](https://img.shields.io/github/actions/workflow/status/dev1191/filament-nepali-address/run-tests.yml?branch=main&label=tests&style=flat-square)](https://github.com/dev1191/filament-nepali-address/actions?query=workflow%3Arun-tests+branch%3Amain)
+[![GitHub Code Style Action Status](https://img.shields.io/github/actions/workflow/status/dev1191/filament-nepali-address/fix-php-code-style-issues.yml?branch=main&label=code%20style&style=flat-square)](https://github.com/dev1191/filament-nepali-address/actions?query=workflow%3A"Fix+PHP+code+styling"+branch%3Amain)
+[![Total Downloads](https://img.shields.io/packagist/dt/dev1191/filament-nepali-address.svg?style=flat-square)](https://packagist.org/packages/dev1191/filament-nepali-address)
 
-<!--delete-->
+A comprehensive, production-ready Nepali address plugin for **Filament (v4 and v5)**.
+
+Provides cascading form selects, smart searchable table columns, cascading table filters, infolist entries, and relationship validation rules for Nepal's administrative divisions: **7 Provinces**, **77 Districts**, and **753 Local Bodies (Municipalities & Rural Municipalities)**.
+
 ---
-This repo can be used to scaffold a Filament plugin. Follow these steps to get started:
 
-1. Press the "Use this template" button at the top of this repo to create a new repo with the contents of this skeleton.
-2. Run "php ./configure.php" to run a script that will replace all placeholders throughout all the files.
-3. Make something great!
+## Features
+
+- ⚡ **Filament v4 & v5 Ready**: Built exclusively for modern Filament schemas and panels.
+- 🔗 **Cascading Form Selects**: Seamless Province ➔ District ➔ Municipality dependent selects with automatic dependent state reset and searchable preloaded options.
+- 🗄️ **Optimized Storage**: Stores clean, normalized integer IDs (`province_id`, `district_id`, `municipality_id`) directly on Eloquent models.
+- 🔍 **High-Performance Table Search**: Automatically translates user text search queries (in both English and Devanagari script) into fast database `whereIn(...)` ID queries instead of slow text matches.
+- 🎯 **Cascading Table Filters**: Multi-level cascading filter with bidirectional auto-population (selecting a municipality auto-selects its district and province) and human-readable badges.
+- 📄 **Infolist Entries**: Read-only display components for Filament infolists.
+- 🛡️ **Built-in Relationship Validation**: Ensures submitted districts belong to the selected province and municipalities belong to the selected district.
+- 🇳🇵 **Bilingual Localization**: Instant English and Nepali (`नेपाली`) language support for administrative names, labels, and validation errors.
+- 📮 **Ward & Postal Code Extensions**: Optional ward number input and validated postal code support.
+
 ---
-<!--/delete-->
 
-This is where your description should go. Limit it to a paragraph or two. Consider adding a small example.
+## Requirements
+
+- **PHP**: `^8.2`
+- **Laravel**: `^11.0` or `^12.0`
+- **Filament**: `^4.0` or `^5.0`
+
+---
 
 ## Installation
 
-You can install the package via composer:
+Install the package via Composer:
 
 ```bash
-composer require :vendor_slug/:package_slug
+composer require dev1191/filament-nepali-address
 ```
 
-> [!IMPORTANT]
-> If you have not set up a custom theme and are using Filament Panels follow the instructions in the [Filament Docs](https://filamentphp.com/docs/4.x/styling/overview#creating-a-custom-theme) first.
-
-After setting up a custom theme add the plugin's views to your theme css file or your app's css file if using the standalone packages.
-
-```css
-@source '../../../../vendor/:vendor_slug/:package_slug/resources/**/*.blade.php';
-```
-
-You can publish and run the migrations with:
+Optionally publish the configuration file:
 
 ```bash
-php artisan vendor:publish --tag=":package_slug-migrations"
-php artisan migrate
+php artisan vendor:publish --tag="nepali-address-config"
 ```
 
-You can publish the config file with:
+Optionally publish the translation files (English and Nepali):
 
 ```bash
-php artisan vendor:publish --tag=":package_slug-config"
+php artisan vendor:publish --tag="nepali-address-translations"
 ```
 
-Optionally, you can publish the views using
+---
 
-```bash
-php artisan vendor:publish --tag=":package_slug-views"
-```
+## Recommended Database Schema
 
-This is the contents of the published config file:
+The plugin recommends storing raw integer IDs for the administrative units. You can add them to your migration:
 
 ```php
-return [
-];
+Schema::table('customers', function (Blueprint $table) {
+    $table->unsignedSmallInteger('province_id')->nullable()->index();
+    $table->unsignedSmallInteger('district_id')->nullable()->index();
+    $table->unsignedSmallInteger('municipality_id')->nullable()->index();
+    $table->unsignedSmallInteger('ward_no')->nullable();
+    $table->string('postal_code', 10)->nullable();
+});
 ```
+
+---
 
 ## Usage
 
+### 1. Form Component (`NepaliAddressSelects`)
+
+Add cascading address selects into your Filament Form:
+
 ```php
-$variable = new VendorName\Skeleton();
-echo $variable->echoPhrase('Hello, VendorName!');
+use Dev1191\FilamentNepaliAddress\Forms\Components\NepaliAddressSelects;
+
+public static function form(Form $form): Form
+{
+    return $form
+        ->schema([
+            // Default 3-column cascading select (Province, District, Municipality)
+            NepaliAddressSelects::make(),
+        ]);
+}
 ```
+
+#### Multi-Address Support (Custom Prefixes)
+
+If your model stores multiple addresses (e.g., `billing_` and `shipping_`), pass the prefix to `make()`:
+
+```php
+NepaliAddressSelects::make('billing_'),
+NepaliAddressSelects::make('shipping_'),
+```
+
+This will automatically bind to:
+- `billing_province_id`, `billing_district_id`, `billing_municipality_id`
+- `shipping_province_id`, `shipping_district_id`, `shipping_municipality_id`
+
+#### Including Ward & Postal Code
+
+```php
+NepaliAddressSelects::make()
+    ->withWard() // Adds numeric 'ward_no' input
+    ->withPostalCode() // Adds validated Nepal postal code input
+```
+
+You can also customize the ward input into a select dropdown:
+
+```php
+NepaliAddressSelects::make()
+    ->withWard(
+        fieldName: 'ward_no',
+        options: array_combine(range(1, 15), range(1, 15))
+    )
+```
+
+#### Individual Field Customizations & Requirements
+
+```php
+NepaliAddressSelects::make()
+    ->required() // Marks province, district, and municipality as required
+    ->provinceRequired()
+    ->districtRequired()
+    ->localBodyRequired()
+    ->columns(3) // Customize grid layout
+    ->relationshipValidation(true) // Enforces parent-child hierarchy validation rules
+```
+
+#### Standalone Field Selects
+
+If you prefer building each field individually rather than using the grouped component:
+
+```php
+NepaliAddressSelects::makeProvinceSelect('province_id'),
+NepaliAddressSelects::makeDistrictSelect('district_id', provinceFieldName: 'province_id'),
+NepaliAddressSelects::makeLocalBodySelect('municipality_id', districtFieldName: 'district_id'),
+NepaliAddressSelects::makePostalCodeInput('postal_code'),
+```
+
+---
+
+### 2. Table Column (`NepaliAddressColumn`)
+
+Display formatted address strings in your Filament Table:
+
+```php
+use Dev1191\FilamentNepaliAddress\Columns\NepaliAddressColumn;
+
+public static function table(Table $table): Table
+{
+    return $table
+        ->columns([
+            // Combined format: "Kathmandu Metropolitan City, Kathmandu, Bagmati Pradesh"
+            NepaliAddressColumn::make('address')
+                ->searchable(), // Smart search across local bodies, districts & provinces!
+
+            // Combined with ward: "Kathmandu Metropolitan City-3, Kathmandu, Bagmati Pradesh"
+            NepaliAddressColumn::make('address')
+                ->withWard(),
+
+            // Multi-address prefix
+            NepaliAddressColumn::make('shipping_address')
+                ->prefix('shipping_'),
+        ]);
+}
+```
+
+#### Single-Level Table Columns
+
+```php
+NepaliAddressColumn::province('province_id'),
+NepaliAddressColumn::district('district_id'),
+NepaliAddressColumn::localBody('municipality_id'),
+NepaliAddressColumn::ward('ward_no'),
+```
+
+#### How Smart Search Works
+
+When a user searches `"Kathmandu"` or `"काठमाडौं"`, the column looks up the matching IDs in-memory and transforms the query into indexed integer constraints:
+
+```sql
+WHERE `municipality_id` IN (270, 271, ...) OR `district_id` IN (5) OR `province_id` IN (3)
+```
+
+This avoids slow string matching and full-table scans.
+
+---
+
+### 3. Table Filter (`NepaliAddressFilter`)
+
+Add a cascading address filter to your Filament Table:
+
+```php
+use Dev1191\FilamentNepaliAddress\Filters\NepaliAddressFilter;
+
+public static function table(Table $table): Table
+{
+    return $table
+        ->filters([
+            // Cascading filter: Province -> District -> Municipality
+            NepaliAddressFilter::make(),
+
+            // With Ward filter
+            NepaliAddressFilter::make()->withWard(),
+
+            // Multi-address prefix
+            NepaliAddressFilter::make('shipping_address')
+                ->prefix('shipping_'),
+        ]);
+}
+```
+
+#### Single-Level Table Filters
+
+```php
+NepaliAddressFilter::province('province_id'),
+NepaliAddressFilter::district('district_id'),
+NepaliAddressFilter::localBody('municipality_id'),
+```
+
+---
+
+### 4. Infolist Entry (`NepaliAddressEntry`)
+
+Display addresses in read-only Filament Infolists:
+
+```php
+use Dev1191\FilamentNepaliAddress\Infolists\Components\NepaliAddressEntry;
+
+public static function infolist(Infolist $infolist): Infolist
+{
+    return $infolist
+        ->schema([
+            // Combined address entry
+            NepaliAddressEntry::make('address')
+                ->withWard(),
+
+            // Single administrative levels
+            NepaliAddressEntry::province('province_id'),
+            NepaliAddressEntry::district('district_id'),
+            NepaliAddressEntry::localBody('municipality_id'),
+        ]);
+}
+```
+
+---
+
+### 5. Standalone Address Helper (`AddressData`)
+
+You can access the static address helper anywhere in your application:
+
+```php
+use Dev1191\FilamentNepaliAddress\Support\AddressData;
+
+// Get all provinces
+$provinces = AddressData::getProvinces();
+
+// Get districts in Bagmati (province_id = 3)
+$districts = AddressData::getDistricts(3);
+
+// Get local bodies in Kathmandu district (district_id = 5)
+$localBodies = AddressData::getLocalBodies(5);
+
+// Resolve names by ID
+$name = AddressData::getProvinceName(3); // "Bagmati Pradesh"
+$name = AddressData::getDistrictName(5);  // "Kathmandu"
+$name = AddressData::getLocalBodyName(270); // "Kathmandu Metropolitan City"
+
+// Format full address
+$address = AddressData::formatAddress(
+    provinceId: 3,
+    districtId: 5,
+    municipalityId: 270,
+    wardNo: 4,
+    separator: ', '
+);
+// "Kathmandu Metropolitan City-4, Kathmandu, Bagmati Pradesh"
+```
+
+---
+
+## Localization (English & नेपाली)
+
+The package automatically adapts to your application's active locale (`app()->getLocale()`).
+
+To force a specific language for address names, publish `config/nepali-address.php` and set:
+
+```php
+return [
+    /*
+    | Options: 'en' for English, 'ne' for Devanagari Nepali
+    */
+    'lang' => 'ne',
+];
+```
+
+When set to `'ne'`, administrative units and labels render natively:
+- **Province**: प्रदेश (e.g., बागमती प्रदेश)
+- **District**: जिल्ला (e.g., काठमाडौं)
+- **Local Body**: स्थानीय तह / पालिका (e.g., काठमाडौं महानगरपालिका)
+- **Ward**: वडा
+
+---
+
+## Data Source & Limitations
+
+This plugin utilizes administrative data from [`khanaldpk/nepali-address`](https://github.com/khanaldpk/nepali-address):
+- **Administrative Divisions**: 7 Provinces, 77 Districts, and 753 Local Bodies (Municipalities, Rural Municipalities, Sub-Metropolitan, Metropolitan cities).
+- **Ward Numbers**: Nepal does not maintain official individual boundary IDs for wards in standard national open datasets. Ward numbers vary between 1 and 35+ per municipality. This package supports ward numbers as direct inputs or configurable selects (`->withWard()`).
+- **Postal Codes**: In Nepal, postal codes correspond to specific post office branches and major towns rather than 1:1 municipality boundaries. This package provides a dedicated `NepaliPostalCodeInput` with official postal code format validation.
+
+---
 
 ## Testing
 
@@ -73,22 +324,45 @@ echo $variable->echoPhrase('Hello, VendorName!');
 composer test
 ```
 
+Run code styling check:
+
+```bash
+composer test:lint
+```
+
+Run static analysis:
+
+```bash
+composer analyse
+```
+
+---
+
 ## Changelog
 
 Please see [CHANGELOG](CHANGELOG.md) for more information on what has changed recently.
+
+---
 
 ## Contributing
 
 Please see [CONTRIBUTING](.github/CONTRIBUTING.md) for details.
 
+---
+
 ## Security Vulnerabilities
 
 Please review [our security policy](.github/SECURITY.md) on how to report security vulnerabilities.
 
+---
+
 ## Credits
 
-- [:author_name](https://github.com/:author_username)
+- [Dev Raj Thapa](https://github.com/dev1191)
+- [khanaldpk/nepali-address](https://github.com/khanaldpk/nepali-address) for the underlying dataset
 - [All Contributors](../../contributors)
+
+---
 
 ## License
 

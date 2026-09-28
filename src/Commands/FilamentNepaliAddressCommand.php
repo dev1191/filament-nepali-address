@@ -1,12 +1,12 @@
 <?php
 
-namespace VendorName\Skeleton\Commands;
+namespace Dev1191\FilamentNepaliAddress\Commands;
 
 use Illuminate\Console\Command;
 
-class SkeletonCommand extends Command
+class FilamentNepaliAddressCommand extends Command
 {
-    public $signature = 'skeleton';
+    public $signature = 'filament-nepali-address';
 
     public $description = 'My command';
 

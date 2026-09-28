@@ -1,7 +1,9 @@
 <?php
 
-namespace VendorName\Skeleton;
+namespace Dev1191\FilamentNepaliAddress;
 
+use Dev1191\FilamentNepaliAddress\Commands\FilamentNepaliAddressCommand;
+use Dev1191\FilamentNepaliAddress\Testing\TestsFilamentNepaliAddress;
 use Filament\Support\Assets\AlpineComponent;
 use Filament\Support\Assets\Asset;
 use Filament\Support\Assets\Css;
@@ -13,14 +15,12 @@ use Livewire\Features\SupportTesting\Testable;
 use Spatie\LaravelPackageTools\Commands\InstallCommand;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
-use VendorName\Skeleton\Commands\SkeletonCommand;
-use VendorName\Skeleton\Testing\TestsSkeleton;
 
-class SkeletonServiceProvider extends PackageServiceProvider
+class FilamentNepaliAddressServiceProvider extends PackageServiceProvider
 {
-    public static string $name = 'skeleton';
+    public static string $name = 'filament-nepali-address';
 
-    public static string $viewNamespace = 'skeleton';
+    public static string $viewNamespace = 'filament-nepali-address';
 
     public function configurePackage(Package $package): void
     {
@@ -36,13 +36,11 @@ class SkeletonServiceProvider extends PackageServiceProvider
                     ->publishConfigFile()
                     ->publishMigrations()
                     ->askToRunMigrations()
-                    ->askToStarRepoOnGitHub(':vendor_slug/:package_slug');
+                    ->askToStarRepoOnGitHub('dev1191/filament-nepali-address');
             });
 
-        $configFileName = $package->shortName();
-
-        if (file_exists($package->basePath("/../config/{$configFileName}.php"))) {
-            $package->hasConfigFile();
+        if (file_exists($package->basePath('/../config/nepali-address.php'))) {
+            $package->hasConfigFile('nepali-address');
         }
 
         if (file_exists($package->basePath('/../database/migrations'))) {
@@ -80,18 +78,21 @@ class SkeletonServiceProvider extends PackageServiceProvider
         if (app()->runningInConsole()) {
             foreach (app(Filesystem::class)->files(__DIR__ . '/../stubs/') as $file) {
                 $this->publishes([
-                    $file->getRealPath() => base_path("stubs/skeleton/{$file->getFilename()}"),
-                ], 'skeleton-stubs');
+                    $file->getRealPath() => base_path("stubs/filament-nepali-address/{$file->getFilename()}"),
+                ], 'filament-nepali-address-stubs');
             }
         }
 
         // Testing
-        Testable::mixin(new TestsSkeleton);
+        Testable::mixin(new TestsFilamentNepaliAddress);
+
+        // Load translations under 'nepali-address' namespace as well
+        $this->loadTranslationsFrom(__DIR__ . '/../resources/lang', 'nepali-address');
     }
 
     protected function getAssetPackageName(): ?string
     {
-        return ':vendor_slug/:package_slug';
+        return 'dev1191/filament-nepali-address';
     }
 
     /**
@@ -100,9 +101,9 @@ class SkeletonServiceProvider extends PackageServiceProvider
     protected function getAssets(): array
     {
         return [
-            // AlpineComponent::make('skeleton', __DIR__ . '/../resources/dist/components/skeleton.js'),
-            // Css::make('skeleton-styles', __DIR__ . '/../resources/dist/skeleton.css'),
-            // Js::make('skeleton-scripts', __DIR__ . '/../resources/dist/skeleton.js'),
+            // AlpineComponent::make('filament-nepali-address', __DIR__ . '/../resources/dist/components/filament-nepali-address.js'),
+            // Css::make('filament-nepali-address-styles', __DIR__ . '/../resources/dist/filament-nepali-address.css'),
+            // Js::make('filament-nepali-address-scripts', __DIR__ . '/../resources/dist/filament-nepali-address.js'),
         ];
     }
 
@@ -112,7 +113,7 @@ class SkeletonServiceProvider extends PackageServiceProvider
     protected function getCommands(): array
     {
         return [
-            SkeletonCommand::class,
+            FilamentNepaliAddressCommand::class,
         ];
     }
 
@@ -146,7 +147,7 @@ class SkeletonServiceProvider extends PackageServiceProvider
     protected function getMigrations(): array
     {
         return [
-            'create_skeleton_table',
+            'create_nepali_address_table',
         ];
     }
 }

@@ -1,32 +1,36 @@
 {
-    "name": ":vendor_slug/:package_slug",
-    "description": ":package_description",
+    "name": "dev1191/filament-nepali-address",
+    "description": "A comprehensive Nepali address plugin for Filament (v4 & v5) providing cascading selects, searchable columns, filters, infolists, and validation.",
     "keywords": [
-        ":vendor_name",
+        "dev1191",
         "laravel",
         "filamentphp",
         "filament",
         "filament-plugin",
-        ":package_slug"
+        "nepal",
+        "nepali-address",
+        "provinces",
+        "districts",
+        "municipalities",
+        "local-bodies"
     ],
-    "homepage": "https://github.com/:vendor_slug/:package_slug",
+    "homepage": "https://github.com/dev1191/filament-nepali-address",
     "support": {
-        "issues": "https://github.com/:vendor_slug/:package_slug/issues",
-        "source": "https://github.com/:vendor_slug/:package_slug"
+        "issues": "https://github.com/dev1191/filament-nepali-address/issues",
+        "source": "https://github.com/dev1191/filament-nepali-address"
     },
     "license": "MIT",
     "authors": [
         {
-            "name": ":author_name",
-            "email": "author@domain.com",
+            "name": "Dev Raj Thapa",
+            "email": "devrajthapa1191@gmail.com",
             "role": "Developer"
         }
     ],
     "require": {
         "php": "^8.2",
-        "filament/filament": "^5.0",
-        "filament/forms": "^5.0",
-        "filament/tables": "^5.0",
+        "filament/filament": "^4.0|^5.0",
+        "khanaldpk/nepali-address": "^1.0",
         "spatie/laravel-package-tools": "^1.15.0"
     },
     "require-dev": {
@@ -43,13 +47,13 @@
     },
     "autoload": {
         "psr-4": {
-            "VendorName\\Skeleton\\": "src/",
-            "VendorName\\Skeleton\\Database\\Factories\\": "database/factories/"
+            "Dev1191\\FilamentNepaliAddress\\": "src/",
+            "Dev1191\\FilamentNepaliAddress\\Database\\Factories\\": "database/factories/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "VendorName\\Skeleton\\Tests\\": "tests/"
+            "Dev1191\\FilamentNepaliAddress\\Tests\\": "tests/"
         }
     },
     "scripts": {
@@ -64,10 +68,10 @@
     "extra": {
         "laravel": {
             "providers": [
-                "VendorName\\Skeleton\\SkeletonServiceProvider"
+                "Dev1191\\FilamentNepaliAddress\\FilamentNepaliAddressServiceProvider"
             ],
             "aliases": {
-                "Skeleton": "VendorName\\Skeleton\\Facades\\Skeleton"
+                "FilamentNepaliAddress": "Dev1191\\FilamentNepaliAddress\\Facades\\FilamentNepaliAddress"
             }
         }
     },
