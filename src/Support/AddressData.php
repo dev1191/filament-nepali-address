@@ -53,7 +53,12 @@ class AddressData
 
     public static function currentLanguage(): string
     {
-        return (string) config('nepali-address.lang', 'en');
+        $lang = config('nepali-address.lang');
+        if (filled($lang)) {
+            return (string) $lang;
+        }
+
+        return str_starts_with((string) app()->getLocale(), 'ne') ? 'ne' : 'en';
     }
 
     public static function getDriver(): NepaliAddress
