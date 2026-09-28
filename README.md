@@ -64,7 +64,7 @@ You can easily add all necessary columns using the built-in `nepaliAddress()` Bl
 ```php
 use Illuminate\Database\Schema\Blueprint;
 
-Schema::table('customers', function (Blueprint $table) {
+Schema::table('users', function (Blueprint $table) {
     // Adds province_id, district_id, municipality_id, ward_no, and postal_code
     $table->nepaliAddress();
 
@@ -77,10 +77,45 @@ Schema::table('customers', function (Blueprint $table) {
 To drop the address columns in rollback migrations:
 
 ```php
-Schema::table('customers', function (Blueprint $table) {
+Schema::table('users', function (Blueprint $table) {
     $table->dropNepaliAddress();
     $table->dropNepaliAddress('billing_');
 });
+```
+
+---
+
+## Model Setup (`User` Model)
+
+Add the `HasNepaliAddress` trait and include the address columns in your Eloquent model (e.g. `App\Models\User`):
+
+```php
+namespace App\Models;
+
+use Dev1191\FilamentNepaliAddress\Traits\HasNepaliAddress;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+
+class User extends Authenticatable
+{
+    use HasNepaliAddress;
+
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var list<string>
+     */
+    protected $fillable = [
+        'name',
+        'email',
+        'password',
+        // Nepali address columns:
+        'province_id',
+        'district_id',
+        'municipality_id',
+        'ward_no',
+        'postal_code',
+    ];
+}
 ```
 
 
@@ -288,13 +323,15 @@ public static function infolist(Infolist $infolist): Infolist
 
 ### 5. Eloquent Model Trait (`HasNepaliAddress`)
 
-Add the `HasNepaliAddress` trait to your models for instant accessors, formatted address strings, and powerful query scopes:
+With the `HasNepaliAddress` trait added to your model (such as `User` or `Customer`), you get instant accessors, formatted address strings, and powerful query scopes:
 
 ```php
-use Dev1191\FilamentNepaliAddress\Traits\HasNepaliAddress;
-use Illuminate\Database\Eloquent\Model;
+namespace App\Models;
 
-class Customer extends Model
+use Dev1191\FilamentNepaliAddress\Traits\HasNepaliAddress;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+
+class User extends Authenticatable
 {
     use HasNepaliAddress;
 }
@@ -305,17 +342,17 @@ class Customer extends Model
 The trait provides convenient Eloquent attribute accessors that automatically resolve administrative IDs into human-readable names based on the active locale:
 
 ```php
-$customer = Customer::find(1);
+$user = User::find(1);
 
 // Automatic name resolution
-$customer->province_name;       // "Bagmati Pradesh" (or "बागमती प्रदेश")
-$customer->district_name;       // "Kathmandu" (or "काठमाडौं")
-$customer->municipality_name;   // "Kathmandu Metropolitan City" (or "काठमाडौं महानगरपालिका")
-$customer->local_body_name;     // Alias for municipality_name
+$user->province_name;       // "Bagmati Pradesh" (or "बागमती प्रदेश")
+$user->district_name;       // "Kathmandu" (or "काठमाडौं")
+$user->municipality_name;   // "Kathmandu Metropolitan City" (or "काठमाडौं महानगरपालिका")
+$user->local_body_name;     // Alias for municipality_name
 
 // Formatted address strings
-$customer->nepali_address;      // "Kathmandu-4, Kathmandu, Bagmati Pradesh"
-$customer->full_nepali_address; // Alias for nepali_address
+$user->nepali_address;      // "Kathmandu-4, Kathmandu, Bagmati Pradesh"
+$user->full_nepali_address; // Alias for nepali_address
 ```
 
 #### Helper Methods & Multi-Address Prefix Support
@@ -324,12 +361,12 @@ When your model stores multiple addresses (e.g. `billing_` and `shipping_`), or 
 
 ```php
 // Resolve names with custom prefix
-$customer->getProvinceName('billing_');     // "Bagmati Pradesh"
-$customer->getDistrictName('billing_');     // "Kathmandu"
-$customer->getLocalBodyName('billing_');    // "Kathmandu Metropolitan City"
+$user->getProvinceName('billing_');     // "Bagmati Pradesh"
+$user->getDistrictName('billing_');     // "Kathmandu"
+$user->getLocalBodyName('billing_');    // "Kathmandu Metropolitan City"
 
 // Format address with custom prefix, ward toggle, and separator
-$customer->getNepaliAddress(
+$user->getNepaliAddress(
     prefix: 'billing_',
     withWard: true,
     separator: ' - '
@@ -337,7 +374,7 @@ $customer->getNepaliAddress(
 // "Kathmandu-4 - Kathmandu - Bagmati Pradesh"
 
 // Address without ward
-$customer->getNepaliAddress('shipping_', withWard: false);
+$user->getNepaliAddress('shipping_', withWard: false);
 // "Kathmandu, Bagmati Pradesh"
 ```
 
@@ -346,23 +383,23 @@ $customer->getNepaliAddress('shipping_', withWard: false);
 Filter records by province, district, local body, ward, or search terms. All query scopes accept an optional `$prefix` argument for multi-address models:
 
 ```php
-// Find all customers in Bagmati Province (province_id = 3)
-Customer::whereProvince(3)->get();
-Customer::whereProvince(3, prefix: 'billing_')->get();
+// Find all users in Bagmati Province (province_id = 3)
+User::whereProvince(3)->get();
+User::whereProvince(3, prefix: 'billing_')->get();
 
-// Find all customers in Kathmandu District (district_id = 5)
-Customer::whereDistrict(5)->get();
-Customer::whereDistrict(5, prefix: 'shipping_')->get();
+// Find all users in Kathmandu District (district_id = 5)
+User::whereDistrict(5)->get();
+User::whereDistrict(5, prefix: 'shipping_')->get();
 
-// Find all customers in a specific local body or ward
-Customer::whereLocalBody(270)->get();
-Customer::whereWard(4)->get();
-Customer::whereWard(4, prefix: 'billing_')->get();
+// Find all users in a specific local body or ward
+User::whereLocalBody(270)->get();
+User::whereWard(4)->get();
+User::whereWard(4, prefix: 'billing_')->get();
 
 // Smart address search (English or Devanagari script)
-Customer::whereNepaliAddress('Kathmandu')->get();
-Customer::whereNepaliAddress('काठमाडौं')->get();
-Customer::whereNepaliAddress('Pokhara', prefix: 'shipping_')->get();
+User::whereNepaliAddress('Kathmandu')->get();
+User::whereNepaliAddress('काठमाडौं')->get();
+User::whereNepaliAddress('Pokhara', prefix: 'shipping_')->get();
 ```
 
 > [!TIP]
